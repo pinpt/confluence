@@ -1,7 +1,9 @@
 package html
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 )
 
 // SEE https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all
@@ -45,5 +47,18 @@ func Parse(buf string) (string, error) {
 		}
 		input = output
 	}
-	return input, nil
+	return wrap(input), nil
+}
+
+func wrap(output string) string {
+	var str string
+	paragraphs := strings.Split(output, "\n\n")
+	if len(paragraphs) == 1 {
+		str = output
+	} else {
+		for _, p := range paragraphs {
+			str += fmt.Sprintf(`<p>%s</p>`, p)
+		}
+	}
+	return fmt.Sprintf(`<div class="source-jira">%s</div>`, str)
 }
