@@ -54,5 +54,5 @@ func (r *listTransformer) Transform(in string) (string, error) {
 }
 
 func init() {
-	register(&listTransformer{regexp.MustCompile("(?m)^[\\*\\#\\-]{1,3}\\s(.*)")})
+	register(&listTransformer{regexp.MustCompile("(?m)^[\\*\\#\\-]{1,3} (.*)")})
 }
