@@ -12,35 +12,43 @@ type tableTransformer struct {
 var _ Transformer = (*tableTransformer)(nil)
 
 func (r *tableTransformer) Transform(in string) (string, error) {
-	matches := r.re.FindAllString(in, -1)
-	if len(matches) == 0 {
+	tables := r.re.FindAllString(in + "\n", -1)
+	if len(tables) == 0 {
 		return in, nil
 	}
-	toks := make([]string, 0)
-	toks = append(toks, "<table>")
-	headers := matches[0]
-	headersTok := strings.Split(headers, "||")
-	headertoks := make([]string, 0)
-	headertoks = append(headertoks, "<tr>")
-	for _, h := range headersTok {
-		headertoks = append(headertoks, "<th>"+strings.TrimSpace(h)+"</th>")
-	}
-	headertoks = append(headertoks, "</tr>")
-	toks = append(toks, strings.Join(headertoks, ""))
-	for _, rowtok := range matches[1:] {
-		row := make([]string, 0)
-		row = append(row, "<tr>")
-		rowsTok := strings.Split(rowtok, "|")
-		for _, t := range rowsTok {
-			row = append(row, "<td>"+t+"</td>")
+	for _, table := range tables {
+		table = strings.TrimRight(table, "\n")
+		matches := regexp.MustCompile("(?m)^\\|(.*)\\|(.*)\\|").FindAllString(table, -1)
+		if len(matches) == 0 {
+			continue
 		}
-		row = append(row, "</tr>")
-		toks = append(toks, strings.Join(row, ""))
+		toks := make([]string, 0)
+		toks = append(toks, "<table>")
+		headers := matches[0]
+		headersTok := strings.Split(headers, "||")
+		headertoks := make([]string, 0)
+		headertoks = append(headertoks, "<tr>")
+		for _, h := range headersTok {
+			headertoks = append(headertoks, "<th>"+strings.TrimSpace(h)+"</th>")
+		}
+		headertoks = append(headertoks, "</tr>")
+		toks = append(toks, strings.Join(headertoks, ""))
+		for _, rowtok := range matches[1:] {
+			row := make([]string, 0)
+			row = append(row, "<tr>")
+			rowsTok := strings.Split(rowtok, "|")
+			for _, t := range rowsTok {
+				row = append(row, "<td>"+t+"</td>")
+			}
+			row = append(row, "</tr>")
+			toks = append(toks, strings.Join(row, ""))
+		}
+		toks = append(toks, "</table>")
+		in = strings.Replace(in, table, strings.Join(toks, "\n"), -1)
 	}
-	toks = append(toks, "</table>")
-	return strings.Join(toks, "\n"), nil
+	return in, nil
 }
 
 func init() {
-	register(&tableTransformer{regexp.MustCompile("(?m)^\\|(.*)\\|(.*)\\|")})
+	register(&tableTransformer{regexp.MustCompile("(?sm)(\\|\\|.*?\\|\\|\\s*(?:\\|.*?\\|\\n)+)")})
 }
