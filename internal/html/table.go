@@ -10,6 +10,7 @@ type tableTransformer struct {
 }
 
 var _ Transformer = (*tableTransformer)(nil)
+var getTableFields = regexp.MustCompile("(?m)^\\|(.*)\\|(.*)\\|")
 
 func (r *tableTransformer) Transform(in string) (string, error) {
 	tables := r.re.FindAllString(in + "\n", -1)
@@ -18,7 +19,7 @@ func (r *tableTransformer) Transform(in string) (string, error) {
 	}
 	for _, table := range tables {
 		table = strings.TrimRight(table, "\n")
-		matches := regexp.MustCompile("(?m)^\\|(.*)\\|(.*)\\|").FindAllString(table, -1)
+		matches := getTableFields.FindAllString(table, -1)
 		if len(matches) == 0 {
 			continue
 		}
